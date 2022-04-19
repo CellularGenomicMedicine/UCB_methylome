@@ -4,7 +4,7 @@
 
 # script purpose: applcation of a mixed effects linear model using the variancePartition package
 
-# input: preprocessed beta values generated using 01preprocessingSWAN.R
+# input: preprocessed m-values generated using 01preprocessingSWAN.R
 #        conducted to compare G5 and HTF within the IVF cohort (including and excluding pregnancy complications)
 #       and once to compare all IVF to all naturally conceived individuals
 
@@ -46,6 +46,9 @@ betas <- fread(betas.file) %>%
 	select(ID, as.character(annotation$Sample_ID)) %>% 
 	column_to_rownames("ID")
 
+betas <- as.matrix(betas) %>%
+        na.omit()
+
 # adjust the sample plate variable in the annotation file
 
 annotation$samplePlate <- if_else(annotation$Sample_Plate == "WG5839007-BCD", "a", "b")
@@ -66,9 +69,7 @@ annotation <- annotation %>% column_to_rownames("Sample_ID")
 
 # calculate the weights (this is only possible on sites containing no NA values)
 
-weights <- voomWithDreamWeights(na.omit(betas), model, annotation)
-
-fit <- dream(weights, model, annotation)
+fit <- dream(betas, formula = model, data = annotation)
 
 design <- fit$design
 
