@@ -4,8 +4,8 @@
 
 # script purpose: statistics testing of CpG sites aggregated into regions (genes, promoters and CpG islands)
 
-# input: preprocessed beta values generated using 01preprocessingSWAN.R to calculate average methylation values per gene
-#        aggregated beta values per promoter and CpG island extracted frmo the output of 01preprocessingSWAN.R
+# input: preprocessed m-values generated using 01preprocessingSWAN.R to calculate average methylation values per gene
+#        aggregated m-values per promoter and CpG island extracted frmo the output of 01preprocessingSWAN.R
 #        conducted to compare G5 and HTF within the IVF cohort (including and excluding pregnancy complications)
 #        and once to compare all IVF to all naturally conceived individuals for each region type (genes, promoters, CpG islands)
 
@@ -128,6 +128,9 @@ regions <- unique(betas.regions$custom_Group)
 ###############################################################################################################
 ################################ conduct statistical testing #################################################
 
+betas.regions = as.matrix(betas.regions) %>%
+        na.omit()
+
 # specify the model
 
 model <- ~ MEDIUM + counts.CD8T + counts.CD4T + counts.NK + counts.Bcell + counts.Mono + 
@@ -145,9 +148,7 @@ for(region in regions){
 		select(-filtering_name, -custom_Group) %>%
 		column_to_rownames("custom_Name")
 
-	weights = voomWithDreamWeights(na.omit(data), model, annotation)	
-
-	fit = dream(weights, model, annotation)
+	fit = dream(data, model, annotation)
 
 	regions[[region]] <- topTable(fit.complex, coef = "MEDIUMvg5", number = Inf)
 
